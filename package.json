@@ -1,0 +1,18 @@
+{
+  "name": "comfluence2k",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "babel-node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel-cli": "^6.24.0",
+    "es6-promise": "^4.1.0",
+    "figlet": "^1.2.0",
+    "isomorphic-fetch": "^2.2.1"
+  }
+}
