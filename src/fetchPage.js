@@ -12,7 +12,10 @@ const fetchPage = (id, cb) => {
   })
   .then(res => res.json())
   .then(data => {
-    cb(data.body.storage.value)
+    cb({
+      title: data.title,
+      body: data.body.storage.value
+    })
   })
 }
 

@@ -2,9 +2,46 @@
 
 body, html {
   font-family: 'Roboto', sans-serif;
+  width: 1000px;
+  margin: 0 auto;
+  font-size: 14px;
+  position: relative;
 }
 
 pre {
   background: #f7f7f9;
-  padding: 20px;
+  padding: 20px 10px;
+}
+
+table, tr, th, td {
+  background: #f7f7f9;
+  border: solid 1px #aaa;
+}
+
+tr, td {
+  padding: 3px;
+}
+
+h1 {
+  margin: 20px 0 30px;
+  font-size: 28px;
+}
+
+h2 {
+  margin: 10px 0;
+  font-size: 22px;
+}
+
+h3 {
+  margin: 10px 0;
+  font-size: 16px;
+}
+
+h4 {
+  font-size: 14px;
+}
+
+img {
+  padding: 10px;
+  max-width: 100%;
 }
