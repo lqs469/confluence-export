@@ -13,6 +13,7 @@
     "babel-cli": "^6.24.0",
     "es6-promise": "^4.1.0",
     "figlet": "^1.2.0",
-    "isomorphic-fetch": "^2.2.1"
+    "isomorphic-fetch": "^2.2.1",
+    "request": "^2.81.0"
   }
 }

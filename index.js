@@ -1,18 +1,28 @@
 require('es6-promise').polyfill()
 require('isomorphic-fetch')
-const figlet = require('figlet')
-
-figlet.text('Comfluence2K', (e, data) => console.log(e || data))
+require('figlet').text('Comfluence2K', (e, data) => console.log(e || data))
+const fs = require('fs')
+const fetchPage = require('./src/fetchPage')
+const handleImg = require('./src/handleImg')
+const handleStyle = require('./src/handleStyle')
 
 const id = process.argv[2]
-const url = `http://192.168.130.51:8090/rest/api/content/${id}?expand=body.storage`
-console.log(url)
 
-fetch(url, {
-  headers: {
-    Accept: 'application/json',
-    Authorization: 'Basic base64(liqinshuo:liqinshuo@k2data.com.cn)'
+fetchPage(id, (page) => {
+  this.page = page
+
+  if (!fs.existsSync(`./build/${id}`)) {
+    fs.mkdirSync(`./build/${id}`)
   }
-}).then(res => res.json()).then(data => {
-  console.log(data)
+
+  fs.writeFile(`./build/${id}/_tmp.html`, this.page, (err) => {
+    console.log(err || 'The tmp file was saved!')
+  })
+
+  handleImg.call(this, page, id)
+  handleStyle.call(this, id)
+
+  fs.writeFile(`./build/${id}/index.html`, this.page, (err) => {
+    console.log(err || 'The file was saved!')
+  })
 })
