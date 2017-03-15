@@ -1,0 +1,324 @@
+
+    <head>
+      <link href="http://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" rel="stylesheet">
+      <link href="./style.css" rel="stylesheet">
+    </head>
+    <body><p>???</p><h1><strong>安装基础环境</strong></h1><h2><strong>检查软硬件基础环境</strong></h2><p>（1）最低配置</p><p>具体配置要求如下表所示（空缺内容表示没有最低要求，但是需要根据项目的性能要求指定）：</p><table><tbody><tr><td><p>项目</p></td><td><p>最低配置</p></td><td><p>建议配置</p></td><td><p>备注</p></td></tr><tr><td><p>CPU</p></td><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr><tr><td><p>内存</p></td><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr><tr><td><p>磁盘</p></td><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr><tr><td><p>操作系统</p></td><td><p>Ubuntu发行版本14.04</p><p>Linux 内核版本&gt;=3.16.0</p></td><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr><tr><td><p>网络</p></td><td><p>千兆网络</p></td><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr><tr><td><p>docker</p></td><td><p>1.11.1</p></td><td><p>&nbsp;</p></td><td><p>依赖docker overlay network和static ip</p></td></tr><tr><td><p>docker-compose</p></td><td><p>1.7.1</p></td><td><p>&nbsp;</p></td><td><p>目的是支持version 2 compose文件格式</p></td></tr></tbody></table><p>&nbsp;</p><p>（2）确认挂载磁盘</p><p>KMX默认使用如下的数据目录，为了充分利用磁盘性能，需要确认各个磁盘的挂载点与KMX数据目录保持一致，具体说明如下：</p><table><tbody><tr><td><p>挂载点</p></td><td><p>作用</p></td><td><p>磁盘选择方法</p></td></tr><tr><td><p>/kmx</p></td><td><p>存放KMX基础组件数据</p></td><td><p>在数据盘中选择一块，如果系统盘容量足够，也可以挂载到系统盘上。</p></td></tr><tr><td><p>/var/lib/docker</p></td><td><p>Docker的本地数据，包括镜像、容器等、网络等</p></td><td><p>在数据盘中选择一块，如果系统盘容量足够，也可以挂载到系统盘上。</p></td></tr><tr><td><p>/disk[1-?]</p></td><td><p>HDFS、Kafka等可以配置多盘提高并发IO性能的数据目录。</p></td><td><p>把/disk1、/disk2... ...等挂载到不同的物理磁盘上。</p></td></tr></tbody></table><p>&nbsp;</p><p>（3）时间同步</p><p>作为一个集群软件，KMX要求各个节点时间和时区保持一致，可以借助NTP服务完成，这里不对NTP服务搭建做介绍。</p><p>（4）关闭swap</p><p>为了避免swap带来的性能损耗，要求将部署KMX的各节点swap功能关闭，方法如下：</p><pre><code># 打开主机的/etc/fstab，注释掉swap挂载点相关的行
+# /etc/fstab: static file system information.
+#
+# Use 'blkid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+/dev/mapper/ubuntu--vg-swap_1 none            swap    sw          0       0
+
+
+# 重启主机，或者执行如下命令使配置生效：
+sudo swapoff -a</code></pre><p>&nbsp;</p><h2><strong>安装docker相关工具</strong></h2><p>（1）安装docker和docker-compose</p><p>在所有节点上进行下列操作：</p><h3>l情况1：在线安装</h3><p>在所有节点上安装docker</p><pre><code>curl -sSL https://get.docker.com/ | sh</code></pre><p>或者（在ubuntu linux下执行）</p><pre><code>wget -qO- https://get.docker.com/ | sh https://docs.docker.com/engine/installation/ubuntulinux/</code></pre><p>&nbsp;</p><p>在所有节点上安装docker-compose</p><pre><code>apt-get install -y python-pip && pip install docker-compose==<version>
+apt-get install -y python-pip && pip install docker-compose==1.1.0</code></pre><h3>情况2：离线安装</h3><p>下载离线安装包，解压后执行以下指令完成安装。</p><pre><code>./install.sh all</code></pre><p>正常执行结果如下：</p><p>&nbsp;</p><p>（2）安装etcd服务</p><p>为了能够搭建docker集群，我们需要借助etcd创建docker overlay网络。</p><p>建议采用etcd集群的方式部署，etcd集群至少需要3个etcd实例，对于每个实例可以按照如下方式安装：</p><pre><code>curl -L  https://github.com/coreos/etcd/releases/download/v2.3.1/etcd-v2.3.1-linux-amd64.tar.gz -o etcd-v2.3.1-linux-amd64.tar.gz
+tar xzvf etcd-v2.3.1-linux-amd64.tar.gz
+cd etcd-v2.3.1-linux-amd64
+nohup etcd \
+    --name server1 \
+    --listen-client-urls http://10.1.10.7:2379 \
+    --advertise-client-urls http://10.1.10.7:2379 \
+    --listen-peer-urls http://10.1.10.7:2380 \
+    --initial-advertise-peer-urls http://10.1.10.7:2380 \
+    --initial-cluster-token etcd-cluster-1 \
+    --initial-cluster 'server1=http://10.1.10.7:2380,server2=http://10.1.10.174:2380,server3=http://10.1.10.179:2380' \
+    --initial-cluster-state new \
+    --enable-pprof &</code></pre><p>&nbsp;</p><p>通过如下命令检验安装结果，如果可以连接成功表示服务正常：</p><pre><code>telnet  <etcd-node-ip>  <2379></code></pre><p>&nbsp;</p><p>到此只是完成了etcd服务端的安装，还需要对每个KMX节点做如下设置：</p><pre><code># 修改/etc/default/docker文件，添加如下两行内容：
+DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:4243 -H unix:///var/run/docker.sock"
+DOCKER_OPTS="$DOCKER_OPTS --cluster-store=etcd://10.1.10.7:2379,10.1.10.174:2379,10.1.10.179:2379 --cluster-advertise=eth0:4243"
+
+
+# 重启docker
+service docker restart
+
+
+# 确认生效，输入内容类似如下内容:
+docker info
+...
+Server Version: 1.11.1
+...
+Cluster store: etcd://<etcd1-ip>:2379,<etcd2-ip>:2379,<etcd3-ip>:2379
+Cluster advertise: 192.168.130.52:4243</code></pre><h1><strong>安装</strong><strong>Cloudera相关服务</strong></h1><p>KMX依赖Cloudera Manager5.9版本，服务包括：</p><ul><li>HDFS</li><li>Hive</li><li>Hue</li><li>Impala</li><li>Oozie</li><li>Spark</li><li>YARN</li><li>Zookeeper</li></ul><p>具体安装过程请参考Cloudera官方文档。</p><p>完成Cloudera服务安装后，需要进行如下初始化工作：</p><p>（1）在部署了HDFS Namenode的节点上以root用户运行如下脚本：</p><pre><code>#!/bin/bash
+
+export HADOOP_USER_NAME=hdfs
+
+# for history server
+hadoop fs -mkdir /tmp
+hadoop fs -chmod 777 /tmp
+hadoop fs -mkdir /var
+hadoop fs -chmod 777 /var
+
+# for ddm
+hadoop fs -mkdir -p /user/hive/warehouse
+hadoop fs -chown -R impala /user/hive
+hadoop fs -chgrp -R impala /user/hive
+
+hadoop fs -mkdir -p /user/history
+hadoop fs -chown -R mapred /user/history
+hadoop fs -chgrp -R mapred /user/history
+hadoop fs -chmod -R 775 /user/history
+
+hadoop fs -mkdir -p /k2data/dataplatform/processing/csvdata
+hadoop fs -mkdir -p /k2data/dataplatform/processing/rawdata
+hadoop fs -mkdir -p /k2data/dataplatform/batch/data
+hadoop fs -chmod -R 777 /k2data/dataplatform
+
+# for k2db
+hdfs dfs -mkdir -p /k2data/dataplatform/_k2db_sys_v1_1/
+
+# for pas
+hadoop fs -mkdir -p /pas/output
+hadoop fs -chmod 1777 /pas/output
+hadoop fs -chmod 1777 /tmp
+hadoop fs -chmod 1777 /user
+hadoop fs -chmod 1777 /user/hive
+hadoop fs -chmod 1777 /user/hive/warehouse
+hadoop fs -chmod 1777 /user/history
+hadoop fs -mkdir -p /user/history/done_intermediate/hive
+hadoop fs -chmod 1777 /user/history/done_intermediate
+hadoop fs -chmod 1777 /user/history/done_intermediate/hive</code></pre><p>&nbsp;</p><p>（2）修改Hive配置，CM管理界面（Hive -&gt; 配置 -&gt; 服务范围 -&gt; 高级 -&gt; hive-site.xml 的 Hive 服务高级配置代码段&nbsp;-&gt;&nbsp;点击右侧 View as XML）添加（更新）如下信息：</p><pre><code><property>
+<name>hive.exec.dynamic.partition.mode</name>
+<value>nostrict</value>
+</property>
+<property>
+<name>hive.exec.dynamic.partition</name>
+<value>true</value>
+</property>
+<property>
+<name>hive.exec.max.dynamic.partitions</name>
+<value>81920</value>
+</property>
+<property>
+<name>hive.exec.max.dynamic.partitions.pernode</name>
+<value>81920</value>
+</property>
+<property>
+<name>parquet.column.index.access</name>
+<value>true</value>
+</property>
+<property>
+<name>hive.merge.size.per.task</name>
+<value>1024000000</value>
+</property>
+<property>
+<name>hive.input.dir.recursive</name>
+<value>true</value>
+</property>
+<property>
+<name>hive.mapred.supports.subdirectories</name>
+<value>true</value>
+</property>
+<property>
+<name>hive.supports.subdirectories</name>
+<value>true</value>
+</property>
+<property>
+<name>mapred.input.dir.recursive</name>
+<value>true</value>
+</property></code></pre><h1><strong>安装KMX服务</strong></h1><h2><strong>生产配置文件</strong></h2><p>KMX提供了命令行工具，用户只需要根据提示输入环境配置信息，即可自动生成安装KMX需要的配置文件。问答过程类似如下：</p><pre><code>Answer a few questions and you will get your k2-compose files :)
+Available KMX versions: ["0.3.0-rc1", "0.3.1", "0.4.0", "0.4.0-cm"]
+Which KMX version to deploy? [0.4.0-cm]
+
+KMX 0.4.0-cm requires a Hadoop cluster managed by the Cloudera Manager (CM)
+Please input CM url [192.168.130.100:7180]192.168.130.52:7180
+Please input CM username [admin]
+Please input CM password [admin]
+Successfully connected to CM at 192.168.130.52:7180
+
+Configure MASTER servers...
+How many CPU threads in each MASTER server? [24]8
+How many main memory (in GB) in each MASTER server? [128]32
+How many MASTER servers? [1]2
+Input MASTER server name #1: [master1]
+Input MASTER server docker host #1: [172.17.0.1:4243]192.168.130.52:4243
+Input MASTER server name #2: [master2]
+Input MASTER server docker host #2: [172.17.0.1:4243]192.168.130.53:4243
+
+... ....
+
+==================  End Configuration Summary  ==================
+confirm? [yes/no] []yes
+/home/yn/temp/kmx/demo/k2-compose.yml
+/home/yn/temp/kmx/demo/init.yml
+/home/yn/temp/kmx/demo/config.yml
+/home/yn/temp/kmx/demo/start-k2c-console.sh
+/home/yn/temp/kmx/demo/start-component-health-agent.sh
+/home/yn/temp/kmx/demo/monitor.yml
+/home/yn/temp/kmx/demo/datasources-grafana
+/home/yn/temp/kmx/demo/dashboard-grafana.json
+/home/yn/temp/kmx/demo/import-ds.sh
+/home/yn/temp/kmx/demo/import-dashboard.sh
+Ready to fire! (Of course you may make necessary changes to those compose files)</code></pre><h2><strong>安装服务</strong></h2><h3>Kafka</h3><p>执行下列操作：</p><pre><code>k2-compose up -d kafka1 kafka2 kafka3 kafka4 #根据k2-compose文件中实际的kafka服务个数启动</code></pre><p>验证：</p><p>在任意一台工作机上执行下列操作进入验证环境：</p><pre><code>docker run -it --rm --net=<project>_default --entrypoint bash dev.k2data.com.cn:5001/k2data/kafka:0.4.0-0.10.0.1</code></pre><p>然后执行下列操作：</p><pre><code>cd /opt/apache/kafka_2.10-0.8.2.2
+# 创建topic
+bin/kafka-topics.sh --zookeeper zookeeper1:2181,zookeeper2:2181,zookeeper3:2181 --create --topic k2_test --replication-factor 4 --partitions 4
+# topic列表：应该能在列表里看到k2_test这个topic
+bin/kafka-topics.sh --zookeeper zookeeper1:2181,zookeeper2:2181,zookeeper3:2181 --list
+# 向k2_test topic写数据，输入任意内容后按回车输入下一条消息，按Crtl+c退出
+bin/kafka-console-producer.sh --broker-list kafka1:9092,kafka2:9092,kafka3:9092,kafka4:9092 --topic k2_test
+# 消费数据，应该能看到上一条命令时输入的消息，按Crtl+c退出
+bin/kafka-console-consumer.sh --zookeeper zookeeper1:2181,zookeeper2:2181,zookeeper3:2181 --topic k2_test --from-beginning
+# 删除topic
+bin/kafka-topics.sh --zookeeper zookeeper1:2181,zookeeper2:2181,zookeeper3:2181 --delete --topic k2_test
+# 确认删除，列表中应该不存在k2_test这个topic了
+bin/kafka-topics.sh --zookeeper zookeeper1:2181,zookeeper2:2181,zookeeper3:2181 --list</code></pre><h3>Storm</h3><p>执行下列操作：</p><pre><code>k2-compose up -d storm-ui
+k2-compose up -d storm-nimbus # k2-compose up -d --ignore-deps storm-nimbus
+k2-compose up -d storm-supervisor1 storm-supervisor2 storm-supervisor3 storm-supervisor4 #根据k2-compose文件中包含的实际storm-supervisor数目启动</code></pre><p>验证：</p><p>在浏览器中打开http://&lt;node1_ip&gt;:8080，应该可以看到Storm UI页面。</p><p>在Supervisor summary中应该可以看到4个supervisor</p><p><img src='./image2016-2-18 11:23:3.png"><ri:page ri:content-title="安装部署 0.2.0' /></p><h3>ActiveMQ</h3><p>执行下列操作：</p><pre><code>k2-compose up -d activemq </code></pre><p>验证：</p><p>在浏览器中打开http://&lt;node2_ip&gt;:8161，用户名密码都是admin，应该可以看到Active MQ页面。</p><p><img src='./image2016-2-22 13:23:58.png"><ri:page ri:content-title="安装部署 0.2.0' /></p><h3>DDM</h3><h4>启动audit-db</h4><p>执行下列操作：</p><pre><code>k2-compose up -d ddm-audit-db 
+
+#若ps为error可能没完全启动好，可直接验证下文，若通过就往后走就行。</code></pre><p>验证：</p><p>执行如下命令：</p><pre><code>k2-compose bash ddm-audit-db #进入audit-db容器
+ </code></pre><p>然后执行如下指令：</p><pre><code>mysql -uroot -ppassw0rd -e "show databases;"</code></pre><p>正常情况可以看到如下信息：</p><p><img src='./image2016-7-11 13:19:12.png"><ri:page ri:content-title="安装部署 0.4.0' /></p><h4>启动flag-db</h4><pre><code>k2-compose up -d ddm-flag-db 
+#若ps为error可能没完全启动好，可直接验证下文，若通过就往后走就行。</code></pre><p>验证：</p><pre><code>k2-compose bash ddm-flag-db #进入flag-db容器 
+mysql -uroot -ppassw0rd -e "show databases;"   #查看数据库</code></pre><p>正常情况下可以看到如下信息：</p><p><img src='./image2016-7-27 11:11:6.png"><ri:page ri:content-title="安装部署 0.4.0' /></p><h4>初始化ddm环境</h4><p>执行下列操作，确保每步操作返回码都是exit with code 0：</p><pre><code>k2-compose -f config.yml up ddm-conf #向zookeeper中写入配置信息
+k2-compose -f config.yml up ddm-reset1  #清空audit-db和storm拓扑
+k2-compose -f config.yml up ddm-reset2  #清空kafka中的topic数据
+k2-compose -f config.yml up ddm-avro-hdfs-topo  #提交基础拓扑：auditTopology, DataLoadScheduleTopology, HdfsTopology和HdfsTopology_anormaly
+k2-compose -f config.yml up ddm-raw-avro-topo  #提交协议转化拓扑：AdapterTopology</code></pre><p>验证：</p><p>访问地址<a href="http://192.168.130.52:8080/index.html">http://&lt;node1_ip&gt;:8080/index.html</a>，在topology summary中看到如下5个拓扑，确保每个拓扑的Num workers不等于0：</p><p><img src='./image2016-7-11 13:27:39.png"><ri:page ri:content-title="安装部署 0.4.0' /></p><p>进一步检验系统的可用性，需要在上图所示的界面中，分别点击每个Topology的name，进入各自界面查看是否有异常报出。</p><p>下图是正常界面，如果有异常会以红色字体显示在Spouts和Bolts区域的Last error中。</p><h4><img src='./image2016-3-30 17:0:12.png"><ri:page ri:content-title="安装部署 0.2.0' /></h4><p>重点check：</p><ol><li>DataLoadScheduleTopology的Spout log，查看方法是：<ol><li>在Storm ui首页<a href="http://192.168.130.52:8080/index.html">http://&lt;node1_ip&gt;:8080/index.html</a>点击DataLoadScheduleTopology名字，跳转页面后在Spouts区域点击&ldquo;dataload-schedule-spout&rdquo;名字，进入spout界面；在Executors区域点击Port端口，修改跳转地址中的域名，比如<a href="http://storm-supervisor2:8000/log?file=DataLoadScheduleTopology-9-1469758029-worker-6705.log">http://<span style="color: rgb(255,0,0);">storm-supervisor2</span>:8000/log?file=DataLoadScheduleTopology-9-1469758029-worker-6705.log</a>中的storm-supervisor2替换为实际部署storm-supervisor2的主机ip（此处是node4的ip）</li><li>点击Download full log，下载完整日志，正常情况下日志中不应该包含错误栈或者Error信息。</li></ol></li><li>HdfsTopology的Spout log，查看方法与上述DataLoadScheduleTopology类似，不过这里的Spout名称为&quot;hdfs-kafka-spout&quot;，同样需要确保spout日志中不能包含错误栈或者Errors信息。</li></ol><h4>安装ddm-message-handler</h4><pre><code>k2-compose up -d ddm-message-handler</code></pre><p>验证：</p><p>访问地址<a href="http://192.168.130.53:8161/admin/queues.jsp">http://&lt;node2_ip&gt;:8161/admin/queues.jsp</a>，确保Queues中有两个队列，并且每个队列的Number of Consumers不为0：</p><p><img src='./image2016-7-11 13:32:9.png"><ri:page ri:content-title="安装部署 0.4.0' /></p><h4>ddm-audit-rest</h4><pre><code>k2-compose up -d ddm-audit-rest</code></pre><p>验证：</p><p>访问http://&lt;as1_ip&gt;:8087/storm/topologies，有如下数据就是成功。</p><p><span style="color: rgb(0,0,0);">&quot;code&quot;:0,&quot;message&quot;:&quot;success&quot;</span></p><h4><span style="color: rgb(0,0,0);">ddm-batch-rest</span></h4><pre><code>k2-compose up -d ddm-batch-rest</code></pre><p><span style="color: rgb(0,0,0);">验证：</span></p><p><span style="color: rgb(0,0,0);">访问http://&lt;as1_ip&gt;:8124/batch-rest/workflows，有如下数据就是成功。</span></p><p><span style="color: rgb(0,0,0);"><span style="color: rgb(0,0,0);">&quot;code&quot;:0,&quot;message&quot;:&quot;success&quot;</span></span></p><h4><strong><span style="color: rgb(0,0,0);">batchload</span></strong></h4><pre><code>k2-compose up -d batchload</code></pre><p>&nbsp;</p><h4><span style="color: rgb(0,0,0);">ddm-batch-task</span></h4><pre><code>k2-compose up -d ddm-batch-task</code></pre><p><span style="color: rgb(0,0,0);">&nbsp;</span></p><p><span style="color: rgb(0,0,0);">验证：暂无</span></p><h3>K2DB</h3><pre><code><p>kmx 1.2.0 生成的k2-compose.yml文件中k2db-rest默认参数不正确，需要修正如下：</p><p><span style="color: rgb(32,32,32);">K2DB_REST_MAX_THRESHOLD_PAGE_SIZE_V4: 10000 </span></p><p><span style="color: rgb(32,32,32);">K2DB_REST_THRESHOLD_VALUE_OF_ITERATION: 10000</span></p></code></pre><p>&nbsp;</p><p>执行下列操作：</p><pre><code>k2-compose up -d k2db-server1 k2db-server2 k2db-server3 k2db-server4  #根据k2-compose文件中包含的实际k2db-server个数启动
+k2-compose up -d k2db-haproxy # 修改k2-compose.yaml 中镜像为dev.k2data.com.cn:5001/k2data/k2dbi/haproxy:dev-0.4.0-1.6.4
+k2-compose up -d k2db-rest
+ </code></pre><p>访问地址<a href="http://localhost:8089/data-service/v3/health" rel="nofollow">http://&lt;node2_ip&gt;:8089/data-service/v3/health</a>，返回如下结果：</p><p><img src='./image2016-7-11 13:37:31.png"><ri:page ri:content-title="安装部署 0.4.0' /></p><h3>SDM</h3><p>执行下列操作：</p><pre><code>k2-compose up -d sdm-db
+k2-compose -f config.yml up sdm-api-reset   #正常情况执行结果exited with code 0
+k2-compose up -d sdm-api</code></pre><p>验证：</p><p>访问http://&lt;node2_ip&gt;:8081/data-service/v2/field-groups，返回如下结果：</p><p><img src='./image2016-7-11 13:41:13.png"><ri:page ri:content-title="安装部署 0.4.0' /></p><h3>TUB</h3><p>执行下列操作：</p><pre><code>k2-compose up -d tub-db
+k2-compose up -d tub-server</code></pre><p>验证：</p><p>访问http://&lt;as1_ip&gt;:21691/tub/v1/health，返回如下结果：</p><p><img src='./image2017-1-20 11:17:22.png' /></p><h3>CAS</h3><p>1.cas初始化用户信息(当前步骤适用于1.2.0，部署1.2.1请跳过当前步骤)：</p><p>在tub-db(see TUB item) docker容器中执行指令：</p><pre><code>mysql -uroot -ppassw0rd < ${SQL_FILE}</code></pre><p>下载：SQL_FILE：<ac:link><ri:attachment ri:filename="kmx_user.sql" /></ac:link></p><p>初始化用户信息验证：</p><p>在tub-db docker容器中执行指令：</p><pre><code>mysql -uroot -ppassw0rd  -e 'select count(*) from kmx_users.t_user'</code></pre><p>出现如下信息表示用户信息初始化成功：</p><p><img src='./image2017-1-20 13:53:34.png' /></p><p>1.cas初始用户信息(当前步骤适用于1.2.1，部署1.2.0请参考上一步骤)：</p><p>部署cas db：</p><p>执行下列操作：</p><pre><code> k2-compose up -d cas-db</code></pre><p>2.部署cas server</p><p>执行下列操作：</p><pre><code> k2-compose up -d cas-server</code></pre><p>cas验证：</p><p>首次访问https//&lt;as1_ip&gt;:8443/cas/login,看到如下页面（以firefox为例）：</p><p><img src='./image2017-1-20 11:22:6.png' /></p><p>按顺序单击：高级-&gt;添加例外...</p><p><strong><img src='./image2017-1-20 11:23:2.png' /></strong></p><p>弹出确认窗口单击确认安全例外</p><p><strong><img src='./image2017-1-20 11:23:29.png' /></strong></p><p>1.进入登陆主页面。输入用户名密码登录系统</p><p><img src='./image2017-1-20 11:24:59.png' /></p><p>默认用户名/密码为k2data/K2Data@k001</p><p>&nbsp;</p><p>2.登入成功后出现如下页面</p><p><img src='./image2017-1-20 11:26:30.png' /></p><p>3.访问https//&lt;as1_ip&gt;:8443/cas/logout登出</p><p><img src='./image2017-1-20 11:27:54.png' /></p><h3>Console</h3><pre><code>k2-compose up -d console</code></pre><p>验证：</p><p>访问http://&lt;as1_ip&gt;:5002/，有如下界面表示成功：</p><p><img src='./image2017-1-12 11:25:56.png' /></p><h3>DDS</h3><p>DDS提供通过REST接口向KMX写入实时数据的服务。</p><p>执行下列操作：</p><pre><code>k2-compose up -d  dds-api</code></pre><p>验证：</p><p>访问地址http://&lt;node2_ip&gt;:8082/data-service/v2/channels/health，返回如下结果：</p><p><img src='./image2016-7-11 13:51:21.png"><ri:page ri:content-title="安装部署 0.4.0' /></p><h3>Nginx</h3><p>通过nginx统一管理KMX对外HTTP入口，处于性能考虑，Nginx安装在物理机上，并提供该物理的IP给用户使用。</p><p>安装方法：<a href="https://nginx.org/en/linux_packages.html#stable">https://nginx.org/en/linux_packages.html#stable</a></p><p>需要管理的接口如下：</p><table><tbody><tr><th>类型</th><th>外部接口（用户）</th><th>内部接口</th><th>备注</th></tr><tr><td>REST API</td><td>http://&lt;host&gt;/kmx/v4/data</td><td>http://&lt;host-of-k2db-rest&gt;:8089/data-service/v4</td><td>K2DB</td></tr><tr><td>REST API</td><td>http://&lt;host&gt;/kmx/v2/<span style="color: rgb(32,32,32);">channels</span></td><td><span class="nolink">http://&lt;host-of-DDS-rest&gt;</span><span style="color: rgb(32,32,32);">:8082/data-service/v2/channels</span></td><td>DDS</td></tr><tr><td>REST API</td><td>http://&lt;host&gt;/kmx/v2/</td><td>http://&lt;host-of-SDM-rest&gt;<span style="color: rgb(32,32,32);">:8081/data-service/v2</span></td><td>SDM</td></tr><tr><td>Web前端</td><td>http://&lt;host&gt;/</td><td>http://&lt;host-of-console&gt;:5002</td><td>Console</td></tr></tbody></table><pre><code><p>Web前端的外部接口地址必须在&ldquo;/&rdquo;下，不能添加/kmx前缀，否则css和js等资源文件找不到，导致界面无法访问。</p></code></pre><p>&nbsp;</p><p>exp: 配置样例</p><pre><code>server {
+    listen       81;
+    server_name  <host>;
+    #charset koi8-r;
+    #access_log  /var/log/nginx/log/host.access.log  main;
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+    }
+ location /kmx/v2/ {
+        client_max_body_size 20M;
+        client_body_buffer_size 20M;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-nginx-location /kmx/v2;
+        # proxy connect to proxied server
+        proxy_connect_timeout 60s;
+        # proxy send request to the proxied server
+        proxy_send_timeout 60s;
+        # proxy wait for response from the proxied server
+        proxy_read_timeout 60s;
+        # proxy trasnmit a response to the client
+        send_timeout 60s;
+        proxy_pass http://<host-of-SDM-rest>:8081/data-service/v2/;
+    }
+
+location /kmx/v2/data/{
+....
+}
+location /kmx/v2/channels/{
+....
+}
+ 
+}</code></pre><h3>PAS</h3><p>执行下列操作：</p><pre><code>k2-compose up -d pas-db 
+k2-compose -f config.yml up pas-db-init #初始化数据库,会重新建表清空所有数据
+
+k2-compose up -d rserve1
+k2-compose up -d rserve2
+...										#rserve个数和datanode个数一样
+k2-compose up -d pas
+k2-compose up -d pas-ui</code></pre><p>准备模型库数据:</p><p>数据脚本文件:</p><p>??????</p><p>执行步骤:</p><p>1.文件上传到pas-db宿主机 /kmx/pas/tmp 目录下</p><p>2.进入pas-db镜像 :docker exec -it&nbsp;[docker name] bash</p><p>3.mysql -u[username] -p[password]</p><p>&nbsp; &nbsp;mysql&gt;use pasdb;</p><p>&nbsp; &nbsp;mysql&gt;<span style="color: rgb(0,0,0);">set names utf8;</span></p><p><span style="color: rgb(0,0,0);">&nbsp; &nbsp;mysql&gt;source /kmx/pas/tmp/alg_type.sql</span></p><p><span style="color: rgb(0,0,0);">&nbsp; &nbsp;mysql&gt;source /kmx/pas/tmp/alg.sql</span></p><p>验证：</p><ol><li>访问地址http://&lt;node2_ip&gt;:8085/pas/services/health，返回如下结果：</li></ol><p style="margin-left: 30.0px;">{<br />&nbsp; &quot;code&quot;: 0,<br />&nbsp; &quot;message&quot;: &quot;&quot;,<br />&nbsp; &quot;result&quot;: {<br />&nbsp; &nbsp; &nbsp; &quot;status&quot;: &quot;normal&quot;,<br />&nbsp; &nbsp; &nbsp; &quot;service&quot;: &quot;Pas Web Service&quot;,<br />&nbsp; &nbsp; &nbsp; &quot;version&quot;: &quot;0.4.0-SNAPSHOT&quot;<br />&nbsp; &nbsp;}<br />}</p><p>2.&nbsp;k2-compose bash pas</p><p>运行:</p><p>sh /usr/local/kmx/pas/sbin/runDemo.sh 或者</p><p>java -DLOGFILE=/usr/local/kmx/pas/pas.log &nbsp;-Dlog4j.configuration=<a href="file:///usr/local/kmx/pas/conf/log4j.properties">file:///usr/local/kmx/pas/conf/log4j.properties</a>&nbsp;-classpath /usr/local/kmx/pas/lib/k2platform-tools-analytics-runtime-0.0.1-SNAPSHOT-jar-with-dependencies.jar com.k2data.platform.tools.analytics.util.HdfsService put /usr/local/kmx/pas/share/demo/src/demo.csv /pas/output/demoInput/demo.csv</p><p>如果成功，则pas可用。</p><h3>Console</h3><pre><code>k2-compose up -d console</code></pre><p>验证:</p><p>访问http://&lt;as1_ip&gt;:5002，有如下界面表示成功:</p><p><strong><img src='./image2017-1-13 11:32:46.png' /></strong></p><p>登陆后:</p><p><img src='./image2017-1-13 11:33:39.png' /></p><h3>Merge</h3><p>通过merge合并load产生的小文件</p><pre><code>k2-compose up -d k2db-merge</code></pre><p>验证</p><pre><code>k2-compose bash k2db-merge</code></pre><p>在k2db-merge容器中</p><pre><code>crontab -l</code></pre><p>会得到如下结果：</p><p>0 12 1-31 1-12 0-6 /opt/k2data/startMerge.sh<br />*/10 * * * * /opt/k2data/startRollback.sh</p><p>参数计算：</p><p>1, 关于&nbsp;<span style="color: rgb(204,120,50);">k2db_storage_merge_file_count_limit&nbsp;</span>考虑merge的周期及workload的频率：</p><p>例如：每天（24*60分钟）做一次merge，mapreduce的频率为每10分钟一次，则&nbsp;<span style="color: rgb(204,120,50);">k2db_storage_merge_file_count_limit&nbsp;</span>&gt; 24 * 60 / 10 即&nbsp;<span style="color: rgb(204,120,50);">k2db_storage_merge_file_count_limit&nbsp;</span>&gt; 144</p><p>经验性数值为180，预期当某次merge失败，则在未来的四次成功merge可以将本次merge失败的文件都合并完。（144 &nbsp;/ （180 - 144）= 4）</p><p>2, 关于&nbsp;<span style="color: rgb(204,120,50);">k2db_storage_merge_parquet_file_size </span>和&nbsp;<span style="color: rgb(204,120,50);">k2db_storage_merge_merge_file_size_threshold&nbsp;</span>的确定：</p><p>首先计算每条记录的大小，并计算出每个分区在mapreduce的频率内会接受多大数据量的记录，记录为&nbsp;<span style="color: rgb(204,120,50);">merging_file_size</span></p><p>那么可以确定一个约束条件为&nbsp;<span style="color: rgb(204,120,50);">k2db_storage_merge_parquet_file_size *</span>&nbsp;<span style="color: rgb(204,120,50);">k2db_storage_merge_merge_file_size_threshold &gt; merging_file_size</span></p><p>一般经验性数据是设置为 <span style="color: rgb(204,120,50);">merging_file_size</span>&nbsp;的两倍</p><p>再计算每天产生的文件大小，这里可以通过&nbsp;<span style="color: rgb(204,120,50);">merging_file_size * 144 / #DataNode&nbsp;</span>，标记为&nbsp;<span style="color: rgb(204,120,50);">merged_file_size</span></p><p>考虑到存在压缩比，所以在&nbsp;<span style="color: rgb(204,120,50);">k2db_storage_merge_merge_file_size_threshold&nbsp;</span>取值为0.1的时候，通过&nbsp;<span style="color: rgb(204,120,50);">merging_file_size&nbsp;</span>计算得到&nbsp;<span style="color: rgb(204,120,50);">k2db_storage_merge_parquet_file_size&nbsp;</span>与&nbsp;<span style="color: rgb(204,120,50);">merged_file_size&nbsp;</span>在同一数量级的时候，可以不用修改</p><p>另外，附上excel计算表，其中红色字体需要填入具体的值</p><p>???</p><p>注：此单级别合并对fieldGroup数量的限制（受sensor_min_interval_ms参数影响）</p><p>参数含义：</p><table><thead><tr style="margin-left: 30.0px;"><th>序号</th><th>参数名称</th><th>参数描述</th><th colspan="1">取值</th><th colspan="1">导致的变化</th><th colspan="1">备注</th></tr></thead><tbody style="margin-left: 30.0px;"><tr style="margin-left: 30.0px;"><td>1</td><td><pre><span style="color: rgb(204,120,50);">k2db_storage_merge_manager_steps</span></pre></td><td><span style="color: rgb(0,0,0);">线程总数</span></td><td colspan="1">6</td><td rowspan="5"><p>&nbsp;</p><p>&nbsp;</p><p>资源消耗</p></td><td colspan="1">请根据当前机器上impalad的数量决定，建议值为count(impalad) * 2，最保守估计为count(impalad)</td></tr><tr style="margin-left: 30.0px;"><td>2</td><td><pre><span style="color: rgb(204,120,50);">k2db_storage_merge_file_count_limit</span></pre></td><td><span style="color: rgb(0,0,0);">文件数量</span></td><td colspan="1">180</td><td colspan="1">参考merge周期，应大于merge周期每个partition中load产生的文件数</td></tr><tr style="margin-left: 30.0px;"><td colspan="1">3</td><td colspan="1"><pre><span style="color: rgb(204,120,50);">k2db_storage_merge_parquet_file_size</span></pre></td><td colspan="1">Merge生成文件的大小上限</td><td colspan="1">30 (30MB)</td><td colspan="1">会影响Impala服务器的内存消耗</td></tr><tr style="margin-left: 30.0px;"><td>4</td><td><pre><span style="color: rgb(204,120,50);">k2db_storage_merge_merge_file_size_threshold</span></pre></td><td><span style="color: rgb(0,0,0);">阈值</span>(<span style="color: rgb(0,0,0);">parquet文件</span>不参与merge的大小）</td><td colspan="1">0.1<br />(即：默认 30MB * 0.1 = 3MB)&nbsp;</td><td colspan="1"><p>与<span style="color: rgb(0,0,0);">parquet文件生成大小</span>的比值，参考<span style="color: rgb(204,120,50);">k2db_storage_merge_parquet_file_size</span></p><p>其值为<span style="color: rgb(204,120,50);">k2db_storage_merge_parquet_file_size</span> * <span style="color: rgb(204,120,50);">k2db_storage_merge_merge_file_size_threshold</span></p></td></tr><tr style="margin-left: 30.0px;"><td colspan="1">5</td><td colspan="1"><pre><span style="color: rgb(204,120,50);">k2db_storage_hdfs_io_file_buffer_size</span></pre></td><td colspan="1">HDFS copy缓冲区大小</td><td colspan="1">102400 (100KB)</td><td colspan="1"><p>经过实验验证，设置4K与2M对于性能及服务器压力几乎无影响。</p></td></tr><tr style="margin-left: 30.0px;"><td colspan="1">6</td><td colspan="1"><pre><span style="color: rgb(204,120,50);">K2DB_MERGE_CRON_PATTERN</span></pre></td><td colspan="1">Merge运行周期</td><td colspan="1">0 12 1-31 1-12 0-6 /opt/k2data/startMerge.sh\n*/10 * * * * /opt/k2data/startRollback.sh</td><td colspan="1">Merge运行周期</td><td colspan="1">警告：此参数依赖于Docker容器内的时区！如果为东8区，请在12上面加8.</td></tr><tr style="margin-left: 30.0px;"><td colspan="1">7</td><td colspan="1"><pre><span style="color: rgb(204,120,50);">k2db_merge_sdm_uri</span></pre></td><td colspan="1">获取metadata信息的网址</td><td colspan="1"><pre><span style="color: rgb(106,135,89);"><span style="color: rgb(106,135,89);"><a href="http://192.168.130.82:8081/data-service/v2/field-groups">http://192.168.130.82:8081/data-service/v2/field-groups</a></span></span></pre></td><td colspan="1">&nbsp;</td><td colspan="1"><p>通过curl获取待merge的表</p><p>注意，如果无法在merge容器中ping到ip对应的网址，请使用ip</p></td></tr></tbody></table><h3><br />动态时序数据的聚合服务</h3><pre><code># 天粒度的聚合 参加DDM部分的ddm-batch-task部署，ddm-batch-task包含了对实时数据和批量数据的天粒度聚合
+k2-compose up -d stats-task-week  # 周粒度的聚合
+k2-compose up -d stats-task-month # 月粒度的聚合
+k2-compose up -d stats-task-year  # 年粒度的聚合</code></pre><p>验证：</p><pre><code>k2-compose logs -f stats-task-week #查看周粒度的聚合服务启动日志</code></pre><p><img src='./image2017-1-12 20:58:26.png' /></p><pre><code>k2-compose logs -f stats-task-month #查看月粒度的聚合服务启动日志</code></pre><p><img src='./image2017-1-12 20:59:54.png' /></p><pre><code>k2-compose logs -f stats-task-year #查看年粒度的聚合服务启动日志</code></pre><p><img src='./image2017-1-12 21:1:57.png' /></p><p>k2-compose环境变量</p><table><tbody><tr><th>序号</th><th>参数名称</th><th>参数描述</th><th>取值</th><th>备注</th></tr><tr><td>1</td><td><span>JDBC_DRIVER</span></td><td><span>JDBC驱动包名</span></td><td>com.mysql.jdbc.Driver</td><td><span>不可修改</span></td></tr><tr><td>2</td><td>DB_URL</td><td><span>数据聚合的数据库地址</span></td><td>jdbc:<a href="mysql://ddm-flag-db:3308/stats">mysql://ddm-flag-db:3308/stats</a></td><td>不用修改</td></tr><tr><td>3</td><td>DB_TABLE</td><td>数据聚合的表名</td><td>stats_by_year或stats_by_month或stats_by_week或stats_by_day</td><td>不用修改</td></tr><tr><td>4</td><td>DB_USER</td><td>数据库用户名</td><td>root</td><td>不用修改</td></tr><tr><td colspan="1">5</td><td colspan="1">DB_PWD</td><td colspan="1"><span>数据库密码</span></td><td colspan="1"><span>passw0rd</span></td><td colspan="1">不用修改</td></tr><tr><td colspan="1">6</td><td colspan="1">TASK_REDUNDANCY</td><td colspan="1">聚合计算冗余度</td><td colspan="1">3</td><td colspan="1">可以自行调整，该参数的含义和具体的DB_TABLE名字相关。如果DB_TABLE=stats_by_year，当前年是2017年，那么冗余计算的时间长度就是2014年到2017年;如果是其他表，含义与之对应。</td></tr><tr><td colspan="1">7</td><td colspan="1">TASK_TRIGGER</td><td colspan="1">历史数据聚合次数</td><td colspan="1">3</td><td colspan="1">可以自行调整，该参数的含义与TASK_REDUNDANCY，DB_TABLE相关。如果DB_TABLE=stats_by_year，TASK_REDUNDANCY=3，表示在当前年即2017年的前3次聚合任务会对2014年到2017年的历史数据进行聚合操作，到了当前年的第4次往后的聚合任务，都只对2017年的数据进行聚合。</td></tr><tr><td colspan="1">8</td><td colspan="1">TASK_CRON</td><td colspan="1">聚合任务触发时刻</td><td colspan="1">0 0 0 * * ?</td><td colspan="1">可以自行调整，该参数的含义与TASK_TRIGGER相关。如 0 0 0 * * ?表示1天触发一次，如果TASK_TRIGGER=3，表示数据最多可以延迟3天到来，在3天内都会历史数据进行聚合，如果过了3天，只会对当前时间段（当前年，当前月，当前周）的数据进行聚合。</td></tr><tr><td colspan="1">9</td><td colspan="1">DATASERVICE_MYSQL_URL</td><td colspan="1">定时框架的数据库地址</td><td colspan="1">jdbc:mysql://sdm-db:3306/stats_week或jdbc:mysql://sdm-db:3306/stats_month或jdbc:mysql://sdm-db:3306/stats_year</td><td colspan="1">对应四个服务stats-task-week，stats-task-month，stats-task-year的定时框架数据库，定时框架数据库必须是mysql5.7</td></tr></tbody></table><h3>动态时序数据轮转服务</h3><pre><code>k2-compose up -d stats-rotation-day   # 天粒度的数据轮转
+k2-compose up -d stats-rotation-week  # 周粒度的数据轮转
+k2-compose up -d stats-rotation-month # 月粒度的数据轮转
+k2-compose up -d stats-rotation-year  # 年粒度的数据轮转 (注意：该服务可按需选择启动或不启动。说明：如果不启动此轮转服务，可通过在查询语句中不指定aggregationOptions且设置timeRange.start、timeRange.end为自然年起始值来实现对历史全量数据的统计查询)</code></pre><p>验证：</p><pre><code>k2-compose  logs -f stats-rotation-day # 查看天粒度的数据轮转服务启动日志</code></pre><p><img src='./image2017-1-12 20:48:49.png' /></p><pre><code>k2-compose  logs -f stats-rotation-week # 查看周粒度的数据轮转服务启动日志</code></pre><p><img src='./image2017-1-12 20:40:16.png' /></p><pre><code>k2-compose  logs -f stats-rotation-month # 查看月粒度的数据轮转服务启动日志</code></pre><p><img src='./image2017-1-12 20:46:22.png' /></p><pre><code>k2-compose  logs -f stats-rotation-year # 查看年粒度的数据轮转服务启动日志</code></pre><p><img src='./image2017-1-12 20:39:42.png' /></p><pre>注意：</pre><p>1.对于每个数据轮转服务的容器，TASK_CRON这个参数设置的任务触发周期要小于PARTITION_TIME_RANGE_DAYS。如分区的时间窗口是16天（PARTITION_TIME_RANGE_DAYS: 16），那么任务触发周期可以是15天（TASK_CRON: 0 10 0 1/15 * ? *）</p><p>2.这四个数据轮转服务的触发时刻也要错开，顺序为stats-rotation-day先触发，其他三个后触发。如stats-rotation-day服务的TASK_CRON: 0 10 0 1/16 * ? *（每隔16天的00：10：00触发），stats-rotation-week的TASK_CRON: 0 20 0 1/16 * ? *，stats-rotation-month的TASK_CRON: 0 30 0 1/16 * ? *，stats-rotation-year的TASK_CRON: 0 40 0 1/16 * ? *。</p><p>k2-compose环境变量</p><table><tbody><tr><th>序号</th><th>参数名称</th><th>参数描述</th><th>取值</th><th>备注</th></tr><tr><td>1</td><td>JDBC_DRIVER</td><td>JDBC驱动包名</td><td><pre>com.mysql.jdbc.Driver</pre></td><td>不可修改</td></tr><tr><td>2</td><td>DB_URL</td><td>数据轮转的数据库地址</td><td>jdbc:mysql://ddm-flag-db:3308/stats</td><td>不用修改</td></tr><tr><td>3</td><td>DB_TABLE_ROTATION</td><td>数据轮转的表名</td><td>stats_by_day或stats_by_week或stats_by_month或stats_by_year</td><td>对应四个服务stats-rotation-day，stats-rotation-week，stats-rotation-month，stats-rotation-year</td></tr><tr><td>4</td><td>DB_USER</td><td>数据库用户名</td><td>root</td><td>不用修改</td></tr><tr><td>5</td><td>DB_PWD</td><td>数据库密码</td><td>passw0rd</td><td>不用修改</td></tr><tr><td colspan="1">6</td><td colspan="1">TASK_CRON</td><td colspan="1">触发时刻点</td><td colspan="1">0 10 0 1/15 * ? *</td><td colspan="1">每隔15天的00:10:00触发</td></tr><tr><td colspan="1">7</td><td colspan="1">TASK_CLASS</td><td colspan="1">执行<span style="white-space: normal;">轮转服务</span>的类名&nbsp;</td><td colspan="1">com.k2data.platform.ddm.k2db.stats.DataRotationTask</td><td colspan="1">不用修改</td></tr><tr><td colspan="1">8</td><td colspan="1">TASK_NAME</td><td colspan="1">任务名字</td><td colspan="1">data-rotation-day</td><td colspan="1">可以修改</td></tr><tr><td colspan="1">9</td><td colspan="1">DATASERVICE_MYSQL_URL</td><td colspan="1">定时框架的数据库地址</td><td colspan="1">jdbc:mysql://sdm-db:3306/rotation_day或jdbc:mysql://sdm-db:3306/rotation_week或jdbc:mysql://sdm-db:3306/rotation_month或jdbc:mysql://sdm-db:3306/rotation_year</td><td colspan="1">对应四个服务stats-rotation-day，stats-rotation-week，stats-rotation-month，stats-rotation-year的定时框架数据库，定时框架数据库必须是mysql5.7</td></tr><tr><td colspan="1">10</td><td colspan="1">PARTITION_DIRECTORY_TEMPLATE</td><td colspan="1">存储分区的磁盘目录模板</td><td colspan="1">/mnt/mysqlData/disk</td><td colspan="1">不可修改</td></tr><tr><td colspan="1">11</td><td colspan="1">PARTITION_TIME_RANGE_DAYS</td><td colspan="1">新增分区的时间窗口大小</td><td colspan="1">16</td><td colspan="1">一般不要修改，如果要修改，必须大于TASK_CRON设置的触发周期，若<span>任务的触发周期是15天，那么</span>新增分区的时间窗口大小可以是16天</td></tr></tbody></table><p>&nbsp;</p><h1>Ops-Center安装KMX服务（非正式发布功能）</h1><p>对于KMX服务，除了按照上述描述的直接使用k2-compose命令行安装外，还可以使用Ops-Center界面安装、监控和操作服务容器。</p><h2><strong>使用生成的opsc.yml文件安装ops-center</strong></h2><ol><li><p>默认将opsc的所有服务装在as1上, &nbsp;注意修改as</p></li><li><p>映射answer文件到opsc容器中:</p><p>默认为:<br />- ./answer:/opt/k2data/kmx-ops-center/api/v1/var/answer<a href="http://answer/opt/k2data/kmx-ops-center/api/v1/var/answer"></a></p><p>将生成的answer文件拷贝至opsc需要安装的主机上,如:使用k2-compose工具生成的answer文件在192.168.130.52上&nbsp;</p><pre><code><p>scp answer root@192.168.130.121:/k2data/opsc/<span style="white-space: normal;"><u>answer</u></span></p></code></pre><p>所以映射路径为:</p><p>- /k2data/opsc/answer:/opt/k2data/kmx-ops-center/api/v1/var/answer</p></li><li><p>启动opsc-mysql</p><pre><code>k2-compose -f opsc.yml up -d opsc-mysql</code></pre></li><li><p>启动opsc-redis</p><pre><code>k2-compose -f opsc.yml up -d opsc-redis</code></pre></li><li><p>启动influxdb</p><pre><code>k2-compose -f opsc.yml up -d influxdb</code></pre></li><li><p>启动kapacitor</p><pre><code>k2-compose -f opsc.yml up -d kapacitor</code></pre></li><li><p>启动chronograf</p><pre><code>k2-compose -f opsc.yml up -d chronograf</code></pre></li><li><p>启动opsc</p><pre><code>k2-compose -f opsc.yml up -d opsc</code></pre></li><li><p>启动opsc-ui</p><pre><code>k2-compose -f opsc.yml up -d opsc-ui</code></pre></li></ol><h2><strong>管理配置文件</strong></h2><p>在OPS-Center中对应的k2-compose文件为：</p><p><img src='./image2017-1-3%252016%253A13%253A14.png%3Fversion%3D1%26amp%3BmodificationDate%3D1483431345844%26amp%3Bapi%3Dv2.png' /></p><pre><code><p>使用<a href="http://192.168.130.51:8090/pages/viewpage.action?pageId=7441392#KMX系统管理-4部署管理功能">OPS-Center部署</a>功能将会自动生成k2-compose文件（注意先注册主机）</p></code></pre><h2><strong>安装服务</strong></h2><p>ops-center界面：</p><p><img src='./image2017-1-3 17:0:47.png' /></p><p>上图中每个方块代表主机，每个圆点表示服务，选中某个圆点服务，界面右上角会出现启动按钮，启动服务即可。服务安装顺序与前面的k2-compose安装方式保持一致。</p><pre><code><ol><li>在ops-center中一个部署对应一个k2c-agent, 因此进入k2c-agent后对默认使用对应部署的k2-compose文件，如上图使用ps命令其实使用了默认的k2-compose文件（在部署界面可以看到）；</li><li>对KMX组件的操作均可通过OPS-Center的k2c-agent完成，如在k2c-agent中执行 k2-compose up kafka1 kafka2 kafka3 kafka4</li></ol></code></pre><h2><strong>监控服务</strong></h2><p>k2-agent是一个实时监控KMX健康状态的容器，可以借助k2-agent监控KMX各个组件的运行状况：</p><p><img src='./image2017-1-3 17:11:58.png' /></p><h2><strong>操作容器</strong></h2><p>所有KMX服务都已经docker化，通过Ops-Center可以方便地进入服务容器中进行操作，如上图进入k2-agent容器的过程。</p><p>另外，有些容器提供了web界面，可以点击节点的超链接进入相关服务的界面，在界面中进行操作。</p><p>&nbsp;</p><p><img src='./image2017-1-3 17:33:23.png' /></p><h1><strong>运维功能</strong></h1><h2><strong>数据库自动备份</strong></h2><h3>动态数据聚合库</h3><p>将下面的脚本拷贝到ddm-flag-db所在的宿主机路径（若没有请创建）：/kmx/archive/mysql/ddm-flag-db/stats/</p><p><ac:link><ri:attachment ri:filename="dump.sh" /></ac:link></p><p>增加系统定时任务，在ddm-flag-db所在宿主机上执行如下命令：</p><pre><code># 以root用户运行
+crontab -e
+ 
+# 增加如下定时任务
+0 3 * * * 6 bash /kmx/archive/mysql/ddm-flag-db/stats/dump.sh</code></pre><div><span style="color: rgb(32,32,32);"><br /></span></div><h2><strong>起停服务</strong></h2><p>部署完毕后，为了方便对全部KMX docker服务进行起停操作，提供如下两个脚本。</p><p>使用方式：在k2-compose容器中切换到配置文件存放目录，创建start-all.sh和stop-all.sh两个脚本，拷贝如下内容，运行即可：</p><pre><code><p>在OPS-Center的k2c-agent容器中使用也可以</p></code></pre><h3>start-all.s</h3><pre><code>#!/bin/bash
+base_dir=$(dirname $(readlink -e $0))
+ 
+######### docker部署版KMX试用 #################
+zookeeper_number=$(cat ${base_dir}/k2-compose.yml | egrep "  zookeeper.:" | wc -l)
+for i in $(seq 1 ${zookeeper_number}); do
+  k2-compose start "zookeeper$i"
+done
+journalnode_number=$(cat ${base_dir}/k2-compose.yml | egrep "  journalnode.:" | wc -l)
+for i in $(seq 1 ${journalnode_number}); do
+  k2-compose start "journalnode$i"
+done
+k2-compose start namenode1 namenode2
+k2-compose start resourcemanager1 resourcemanager2
+k2-compose start impala1 impala2
+ddm_slave_number=$(cat ${base_dir}/k2-compose.yml | egrep "  ddm-slave.:" | wc -l)
+for i in $(seq 1 ${ddm_slave_number}); do
+  k2-compose start "ddm-slave$i"
+done
+#########################################
+kafka_number=$(cat ${base_dir}/k2-compose.yml | egrep "  kafka.:" | wc -l)
+for i in $(seq 1 ${kafka_number}); do
+  k2-compose start "kafka$i"
+done
+k2-compose start storm-ui
+k2-compose start storm-nimbus
+storm_supervisor_number=$(cat ${base_dir}/k2-compose.yml | egrep "  storm-supervisor.:" | wc -l)
+for i in $(seq 1 ${storm_supervisor_number}); do
+  k2-compose start "storm-supervisor$i"
+done
+k2-compose start activemq
+k2-compose start ddm-audit-db
+k2-compose start ddm-flag-db
+k2-compose start ddm-message-handler
+k2db_server_number=$(cat ${base_dir}/k2-compose.yml | egrep "  k2db-server.:" | wc -l)
+for i in $(seq 1 ${k2db_server_number}); do
+  k2-compose start "k2db-server$i"
+done
+k2-compose start k2db-haproxy
+k2-compose start k2db-rest
+k2-compose start sdm-db sdm-api
+k2-compose start console-rest console
+k2-compose start dds-api
+k2-compose start k2db-merge
+ </code></pre><h3>stop-all.sh</h3><pre><code>#!/bin/bash
+base_dir=$(dirname $(readlink -e $0))
+k2-compose stop dds-api
+k2-compose stop console console-rest
+k2-compose stop sdm-api sdm-db
+k2-compose stop k2db-rest k2db-haproxy
+k2db_server_number=$(cat ${base_dir}/k2-compose.yml | egrep "  k2db-server.:" | wc -l)
+for i in $(seq 1 ${k2db_server_number}); do
+  k2-compose stop "k2db-server$i"
+done
+k2-compose stop ddm-message-handler
+k2-compose stop ddm-flag-db
+k2-compose stop ddm-audit-db
+k2-compose stop activemq
+storm_supervisor_number=$(cat ${base_dir}/k2-compose.yml | egrep "  storm-supervisor.:" | wc -l)
+for i in $(seq 1 ${storm_supervisor_number}); do
+  k2-compose stop "storm-supervisor$i"
+done
+k2-compose stop storm-nimbus
+k2-compose stop storm-ui
+kafka_number=$(cat ${base_dir}/k2-compose.yml | egrep "  kafka.:" | wc -l)
+for i in $(seq 1 ${kafka_number+1}); do
+  k2-compose stop "kafka$i"
+done
+ 
+######### docker部署版KMX试用 #################
+ddm_slave_number=$(cat ${base_dir}/k2-compose.yml | egrep "  ddm-slave.:" | wc -l)
+for i in $(seq 1 ${ddm_slave_number}); do
+  k2-compose stop "ddm-slave$i"
+done
+k2-compose stop impala2 impala1
+k2-compose stop resourcemanager2 resourcemanager1
+k2-compose stop namenode2 namenode1
+journalnode_number=$(cat ${base_dir}/k2-compose.yml | egrep "  journalnode.:" | wc -l)
+for i in $(seq 1 ${journalnode_number}); do
+  k2-compose stop "journalnode$i"
+done
+zookeeper_number=$(cat ${base_dir}/k2-compose.yml | egrep "  zookeeper.:" | wc -l)
+for i in $(seq 1 ${zookeeper_number}); do
+  k2-compose stop "zookeeper$i"
+done
+##############################################3
+k2-compose stop k2db-merge </code></pre><h1><strong style="line-height: 1.25;">端到端验证</strong></h1><h2>1. 功能验证</h2><p>使用平台提供的测试工具datatool生成测试数据，自动完成元数据注册和动态数据发送。如果最终数据能成功落库，则表示部署正确。</p><h2>2. 性能验证</h2><p>类似功能验证步骤，但是根据集群配置和性能目标，调整发数间隔（参数名为sendDataInterval， 设置值在做测试时咨询负责项目的开发人员）并根据需要调整发数时间（参数名为sendDataDuration，一般设置12h左右），其他步骤包括开始验证、结果验证和功能验证相同，<span style="color: rgb(255,0,0);">测试过程中注意对集群的资源使用情况进行截图分析</span>。</p><h1><strong>Trouble Shooting</strong></h1><h2><strong>Docker network&nbsp;</strong></h2><h3>ERROR: subnet sandbox join failed for &quot;10.0.9.0/24&quot;: error creating vxlan interface: file exists</h3><pre><code>shell# service docker stop
+shell# umount /var/run/docker/netns/*
+shell# rm /var/run/docker/netns/*
+shell# service docker start</code></pre><p>&nbsp;</p><pre style="background-color: rgb(43,43,43);color: rgb(169,183,198);font-family: &quot;Source Code Pro&quot;;font-size: 10.5pt;"><span style="color: rgb(204,120,50);font-weight: bold;">TASK_CRON</span></pre><pre style="background-color: rgb(43,43,43);color: rgb(169,183,198);font-family: &quot;Source Code Pro&quot;;font-size: 10.5pt;"><span style="color: rgb(204,120,50);font-weight: bold;">DB_URL</span></pre><pre style="background-color: rgb(43,43,43);color: rgb(169,183,198);font-family: &quot;Source Code Pro&quot;;font-size: 10.5pt;"><span style="color: rgb(204,120,50);font-weight: bold;">TASK_TRIGGER</span></pre><p>&nbsp;</p><pre><code>k2-compose -f opsc.yml up -d opsc-mysql</code></pre></body>
+  

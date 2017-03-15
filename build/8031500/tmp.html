@@ -1,0 +1,84 @@
+<h1>一、新建分析项目</h1>
+<p>&ldquo;数据分析&rdquo;首页是分析项目列表，左侧是功能导航。</p>
+<ac:structured-macro ac:macro-id="77dfd19b-3f77-4bff-aa9a-5725a7841c13" ac:name="info" ac:schema-version="1">
+  <ac:rich-text-body>
+    <p>&ldquo;分析项目&rdquo;：PAS用于组织不同分析任务的单元。</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<p>
+  <ac:image>
+    <ri:attachment ri:filename="ex-1.png" />
+  </ac:image>
+</p>
+<p>（1）进入&ldquo;数据分析&rdquo;；</p>
+<p>（2）新建分析项目；</p>
+<h1>二、输入基本信息</h1>
+<p>
+  <ac:image>
+    <ri:attachment ri:filename="ex-2.png" />
+  </ac:image>
+</p>
+<p>（1）填写&ldquo;项目名称&rdquo;；</p>
+<p>（2）分析类型选取选择&ldquo;Extraction&rdquo;，这样表示仅仅从KMX里抽取数据，而不上传算法文件对抽取结果进行计算；</p>
+<p>（3）数据源选择&ldquo;kmx&rdquo;；</p>
+<p>（4）输入项目描述信息；填写好后点击右下角的&ldquo;下一步&rdquo;。</p>
+<h1>三、输入数据源信息</h1>
+<p>
+  <ac:image>
+    <ri:attachment ri:filename="ex-3.png" />
+  </ac:image>
+</p>
+<p>（1）选择数据源的表名（对应元数据注册的FiledGroup模板名）；</p>
+<p>（2）设置抽取结果是否带表头；</p>
+<p>（3）选择要抽取的字段；</p>
+<p>（4）选择时间范围；</p>
+<p>（5）预览，如果没有结果，可能是时间范围选择有误，可以到&ldquo;数据管理&rdquo;界面浏览该表数据有数据的范围，以及选定范围是否有数据；</p>
+<p>&nbsp;</p>
+<p>下图为预览得到的信息：</p>
+<p>
+  <ac:image>
+    <ri:attachment ri:filename="ex-4.png" />
+  </ac:image>
+</p>
+<h1>四、输入并行化分组信息</h1>
+<p>
+  <ac:image>
+    <ri:attachment ri:filename="ex-5.png" />
+  </ac:image>
+</p>
+<p>（1）如果所有结果都放在一个csv文件里，这个文件会很大，不利于我们下载或计算。这里，我们选择按风机分组，每个风机导出的文件放到一个文件。</p>
+<p>（2）保存并运行项目；</p>
+<h1>五、运行项目</h1>
+<p>
+  <ac:image>
+    <ri:attachment ri:filename="ex-6.png" />
+  </ac:image>
+</p>
+<p>（1）点击&ldquo;分析作业&rdquo;查看分析项目作业运行情况；</p>
+<p>（2）查看项目运行进度；</p>
+<p>（3）点击&ldquo;节点监控&rdquo;查看集群资源分配使用情况，可以看到集群分配了多个节点资源以抽取数据。</p>
+<h1>六、查看导出结果</h1>
+<p>因为我们选择的时间段比较短，所以项目很快就执行结束了。点击导航栏左侧的&ldquo;分析作业&rdquo;可以看到刚才项目运行情况（开始时间、结束时间、运行时长、结果等等）。</p>
+<ac:structured-macro ac:macro-id="efb4f320-a441-4ee1-bd52-35c543341a33" ac:name="info" ac:schema-version="1">
+  <ac:rich-text-body>
+    <p>&nbsp;&ldquo;分析作业&rdquo;：是指项目的一次运行实例，如果项目运行了多次，就会产生多个作业。</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<p><br />
+  <ac:image>
+    <ri:attachment ri:filename="ex-7.png" />
+  </ac:image>
+</p>
+<p>（1）点击作业列表右侧的&ldquo;文件&rdquo;链接，可以浏览到这个作业产生的结果文件。我们项目设置的按风机分组，所以产生了三个文件。</p>
+<h1>七、下载导出数据</h1>
+<p>
+  <ac:image>
+    <ri:attachment ri:filename="ex-8.png" />
+  </ac:image>
+</p>
+<p>（1）点击文件列表右侧的&ldquo;下载&rdquo;链接，下载其中的一个文件到本地。</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
