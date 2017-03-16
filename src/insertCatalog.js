@@ -30,7 +30,7 @@ function insertCatalog (tree, title) {
   this.page = `
     <div class="catalog">
       <h1 class='title'>KMX文档</h1>
-      <h2 style='padding-left: 25px;'>目录</h2>
+      <h3 style='padding-left: 25px;'>目录</h3>
       ${Tree(tree)}
     </div>
     <div class='main-view'>
