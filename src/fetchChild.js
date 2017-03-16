@@ -16,7 +16,7 @@ const fetchChild = (id, cb) => {
     data.results.map(p => {
       tree.push({ id: p.id, title: p.title, children: [] })
     })
-    return tree
+    return tree.sort((a, b) => +a.id - +b.id)
   }).then((parents) =>{
     const eachFetch = parents.map(l => {
       return fetchTree(l.id).then(data => {
@@ -28,7 +28,7 @@ const fetchChild = (id, cb) => {
               id: f.id,
               title: f.title
             }
-          })
+          }).sort((a, b) => +a.id - +b.id)
         }
       })
     })
