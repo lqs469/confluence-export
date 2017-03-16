@@ -13,7 +13,7 @@ const id = process.argv[2]
 
 
 fetchChild(id).then((tree) => {
-  tree.reverse()
+  tree.sort((a, b) => +a.id - +b.id)
   tree.map(l => {
     getPage(l.id, tree)
     l.children.map(f => {
