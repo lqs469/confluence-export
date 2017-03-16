@@ -1,8 +1,10 @@
 const fs = require('fs')
 
-function handleStyle (id, title) {
+function handleStyle (id) {
   fs.createReadStream('./src/asset/style.css')
   .pipe(fs.createWriteStream(`./build/${id}/style.css`))
+  fs.createReadStream('./src/asset/dot.svg')
+  .pipe(fs.createWriteStream(`./build/${id}/dot.svg`))
 
   this.page = `
     <head>
@@ -10,7 +12,6 @@ function handleStyle (id, title) {
       <link href="./style.css" rel="stylesheet">
     </head>
     <body>
-      <h1>${title}</h1>
       ${this.page}
     </body>
   `

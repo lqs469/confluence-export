@@ -1,25 +1,38 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto');
+/*@import url('https://fonts.googleapis.com/css?family=Roboto');*/
 
 body, html {
   font-family: 'Roboto', sans-serif;
-  width: 1000px;
-  margin: 0 auto;
   font-size: 14px;
   position: relative;
 }
 
+.main-view {
+  display: inline-block;
+  width: 75%;
+  max-width: 900px;
+}
+
+p {
+  margin-bottom: 0px;
+}
+
 pre {
   background: #f7f7f9;
-  padding: 20px 10px;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+table {
+  margin: 10px 0;
 }
 
 table, tr, th, td {
   background: #f7f7f9;
-  border: solid 1px #aaa;
+  border: solid 1px #ccc;
 }
 
 tr, td {
-  padding: 3px;
+  padding: 5px;
 }
 
 h1 {
@@ -44,4 +57,50 @@ h4 {
 img {
   padding: 10px;
   max-width: 100%;
+}
+
+.title {
+  line-height: 50px;
+  text-align: center;
+  background: #f4f4f4;
+  margin: 0 40px 40px 0;
+}
+
+.catalog {
+  display: inline-block;
+  top: 0;
+  left: 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, .5);
+  height: 100%;
+  width: 25%;
+  min-width: 200px;
+  z-index: 1;
+  vertical-align: top;
+}
+
+.cata-ul {
+  padding-left: 15px;
+  margin-bottom: 0;
+}
+
+.link {
+  position: relative;
+  line-height: 30px;
+  color: #444;
+  text-decoration: none;
+  overflow: hidden;
+  display: block;
+  padding-left: 30px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.link::before {
+  content: url('./dot.svg');
+  position: absolute;
+  line-height: 30px;
+  top: 0;
+  left: -3px;
 }
