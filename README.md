@@ -1,7 +1,7 @@
 # Confluence2k
 [中文文档](https://github.com/lqs469/confluence2k/blob/dev/README-zh.md)
 
-Export web docment from confluence with nice style (just one code).
+Export HTML from confluence with nice style (just one code).
 
 ### User stories
 - Confluence page can't be converted into manual or docment for users.
