@@ -1,4 +1,5 @@
 const downloadImg = require('./downloadImg')
+const chalk = require('chalk')
 
 function handleImg (id) {
   var page = this.page
@@ -21,7 +22,7 @@ function handleImg (id) {
       var imgName = (/<ac:parameter ac:name="diagramName">([\s\S]+?)<\/ac:parameter>/g).exec(ac[1])[1]
 
       downloadImg(`${id}/${imgName}.png`, `./build/${id}/${imgName}.png`, (info) => {
-        console.log(`- File ${imgName}.png download completed`)
+        console.log(chalk.green(`- File ${imgName}.png download completed`))
       })
 
       return page.replace(ac[0], `<img src='./${encodeURIComponent(imgName)}.png' />`)
@@ -47,7 +48,7 @@ function handleImg (id) {
     img = `<img src="./${encodeURIComponent(imgName)}" />`
 
     downloadImg(url, `./build/${id}/${imgName}`, (info) => {
-      console.log(`- File ${imgName}.png download completed`)
+      console.log(chalk.green(`- File ${imgName}.png download completed`))
     })
     return page.replace(ac[0], img)
   }

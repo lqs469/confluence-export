@@ -1,7 +1,7 @@
 require('dotenv').load()
 require('es6-promise').polyfill()
 require('isomorphic-fetch')
-require('figlet').text('Confluence2K', (e, data) => console.log(e || data))
+const chalk = require('chalk')
 const fs = require('fs')
 const fetchChild = require('./src/fetchChild')
 const fetchPage = require('./src/fetchPage')
@@ -10,8 +10,8 @@ const handleStyle = require('./src/handleStyle')
 const handleX = require('./src/handleX')
 const insertCatalog = require('./src/insertCatalog')
 
+require('figlet').text('Confluence2K', (e, data) => console.log(e || data))
 const id = process.argv[2]
-
 
 fetchChild(id).then((tree) => {
   tree.map(l => {
@@ -41,7 +41,7 @@ function getPage (child, tree) {
     handleImg.call(this, child)
   }).then(() => {
     fs.writeFile(`./build/${child}/index.html`, this.page, (err) => {
-      console.log(err || `- got ${child}!`)
+      console.log(err || `${chalk.cyan(`- got ${child}!`)}`)
     })
   })
 }

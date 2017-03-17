@@ -1,4 +1,5 @@
 const fs = require('fs')
+const chalk = require('chalk')
 
 function insertCatalog (tree, title) {
   var link = (id, title, hasChild) => {
@@ -43,7 +44,7 @@ function insertCatalog (tree, title) {
   var landPage = `<script>location.href = './${fristPage}/index.html'</script>`
 
   fs.writeFile(`./build/index.html`, landPage, (err) => {
-    console.log(err || '- The landPage was saved!')
+    console.log(err || chalk.blue('- The landPage was saved!'))
   })
 }
 
