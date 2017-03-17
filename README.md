@@ -7,16 +7,16 @@ Export HTML from confluence with nice style (just one code).
 - Confluence page can't be converted into manual or docment for users.
 - Exported HTML by confluence's export tool is so ugly and has a lot of bugs.
 
-### Getting Started
-1. `git clone` OR download repo.
-1. `npm install`
+### Requirements:
+- `node ^4.5.0`
+- `npm ^3.0.0` or `yarn ^0.17.0`
 
-  Requirements:
-  - `node ^4.5.0`
-  - `npm ^3.0.0` or `yarn ^0.17.0`
+### Getting Started
+1. `git clone` or download repo.
+1. `npm install` or `yarn`
 1. `npm start [confluence page id]`
 
-  eg: `npm start 741256` will export all page the children of page with id is 741256
+	eg: `npm start 741256` will export all page the children of page with id is 741256
 1. Export HTML file to the `./build`, open `index.html`.
 
 ### Some Stuff
