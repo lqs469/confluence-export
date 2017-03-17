@@ -6,18 +6,18 @@
 - confluence文档没法变成用户手册
 - confluence自带的导出文档界面丑陋，交互困难，没法给用户看
 
-### 使用方法
-1. `git clone` 或者 download repo.
-1. `npm install`
+### 环境需要:
+- `node ^4.5.0`
+- `npm ^3.0.0` or `yarn ^0.17.0`
 
-    环境需要:
-    - `node ^4.5.0`
-    - `npm ^3.0.0` or `yarn ^0.17.0`
+### 使用方法
+1. `git clone` 或 download repo.
+1. `npm install` 或 `yarn`
 1. `npm start [confluence根文章id]`
 
-  会以id为根目录, 导出根目录以下的结构和文章
+	会以id为根目录, 导出根目录以下的结构和文章
 
-    例如: `npm start 741256` 会导出 id=741256 下的所有子文章
+	例如: `npm start 741256` 会导出 id=741256 下的所有子文章
 1. 导出的静态文档在`./build`中, 可以打开`index.html`查看文档.
 
 ### 注意事项
