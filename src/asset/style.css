@@ -12,6 +12,57 @@ body, html {
   max-width: 900px;
 }
 
+.title {
+  line-height: 50px;
+  text-align: center;
+  background: #f4f4f4;
+  margin: 0 40px 40px 0;
+}
+
+.catalog {
+  display: inline-block;
+  top: 0;
+  left: 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, .5);
+  height: 100%;
+  width: 25%;
+  min-width: 200px;
+  z-index: 1;
+  vertical-align: top;
+}
+
+.cata-ul {
+  position: relative;
+  padding-left: 30px;
+  margin-bottom: 0;
+}
+
+.link {
+  position: relative;
+  line-height: 30px;
+  color: #444;
+  text-decoration: none;
+  overflow: hidden;
+  display: block;
+  padding-left: 20px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.has-child {
+  padding-left: 40px;
+}
+
+.has-child::before {
+  content: url('./dot.svg');
+  position: absolute;
+  line-height: 30px;
+  top: 0;
+  left: 10px;
+}
+
 p {
   margin-bottom: 0px;
 }
@@ -57,50 +108,4 @@ h4 {
 img {
   padding: 10px;
   max-width: 100%;
-}
-
-.title {
-  line-height: 50px;
-  text-align: center;
-  background: #f4f4f4;
-  margin: 0 40px 40px 0;
-}
-
-.catalog {
-  display: inline-block;
-  top: 0;
-  left: 0;
-  padding: 10px;
-  background: rgba(255, 255, 255, .5);
-  height: 100%;
-  width: 25%;
-  min-width: 200px;
-  z-index: 1;
-  vertical-align: top;
-}
-
-.cata-ul {
-  padding-left: 15px;
-  margin-bottom: 0;
-}
-
-.link {
-  position: relative;
-  line-height: 30px;
-  color: #444;
-  text-decoration: none;
-  overflow: hidden;
-  display: block;
-  padding-left: 30px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.link::before {
-  content: url('./dot.svg');
-  position: absolute;
-  line-height: 30px;
-  top: 0;
-  left: -3px;
 }
