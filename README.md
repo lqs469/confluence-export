@@ -1,5 +1,5 @@
 # Confluence2k
-[中文文档]()
+[中文文档](https://github.com/lqs469/confluence2k/blob/dev/README-zh.md)
 
 Export web docment from confluence with nice style (just one code).
 
