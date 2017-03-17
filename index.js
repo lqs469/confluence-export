@@ -1,3 +1,4 @@
+require('dotenv').load()
 require('es6-promise').polyfill()
 require('isomorphic-fetch')
 require('figlet').text('Confluence2K', (e, data) => console.log(e || data))
