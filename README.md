@@ -30,4 +30,4 @@ Export HTML from confluence with nice style (just one code).
 - Continue, Anything just post Issues.
 
 ### Demo
-![](./demo.png)
+![](./demo.jpg)
