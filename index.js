@@ -12,6 +12,7 @@ const insertCatalog = require('./src/insertCatalog')
 
 require('figlet').text('Confluence2K', (e, data) => console.log(e || data))
 const id = process.argv[2]
+const name = process.argv[3]
 
 fetchChild(id).then((tree) => {
   tree.map(l => {
@@ -34,14 +35,17 @@ function getPage (child, tree) {
 
     fs.writeFile(`./build/${child}/_tmp.html`, this.page, (err) => {})
   }).then(() => {
-    insertCatalog.call(this, tree, this.title)
+    insertCatalog.call(this, tree, this.title, name)
     handleX.call(this, child)
     handleStyle.call(this, child)
   }).then(() => {
-    handleImg.call(this, child)
+    new Promise((resolve) => {
+      handleImg.call(this, child)
+      resolve()
+    }).catch(() => {})
   }).then(() => {
     fs.writeFile(`./build/${child}/index.html`, this.page, (err) => {
       console.log(err || `${chalk.cyan(`- got ${child}!`)}`)
     })
-  })
+  }).catch(() => {})
 }

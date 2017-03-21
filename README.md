@@ -14,9 +14,9 @@ Export HTML from confluence with nice style (just one code).
 ### Getting Started
 1. `git clone` or download repo.
 1. `npm install` or `yarn`
-1. `npm start [confluence page id]`
+1. `npm start [confluence page id] [Doc name]`
 
-	eg: `npm start 741256` will export all page the children of page with id is 741256
+	eg: `npm start 741256 Doc-1.0` will export all page the children of page with id is 741256
 1. Export HTML file to the `./build`, open `index.html`.
 
 ### Some Stuff

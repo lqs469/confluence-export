@@ -1,7 +1,7 @@
 const fs = require('fs')
 const chalk = require('chalk')
 
-function insertCatalog (tree, title) {
+function insertCatalog (tree, title, name) {
   var link = (id, title, hasChild) => {
     fristPage = id < fristPage ? id : fristPage
     return `<a class="link ${hasChild ? 'has-child': ''}" href="../${id}/index.html">${title}</a>`
@@ -32,7 +32,7 @@ function insertCatalog (tree, title) {
 
   this.page = `
     <div class="catalog">
-      <h1 class='title'>KMX文档</h1>
+      <h1 class='title'>${name}</h1>
       <h3 style='padding-left: 20px;'>目录</h3>
       ${Tree(tree)}
     </div>

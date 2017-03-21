@@ -16,7 +16,6 @@ function handleImg (id) {
 
   function replace1 (page) {
     var ac = (/<ac:structured-macro[\s\S]+?>([\s\S]+?)<\/ac:structured-macro>/g).exec(page)
-    // ac[0] = all, ac[1] = params
 
     if ((/<ac:parameter ac:name="diagramName">([\s\S]*)<\/ac:parameter>/g).test(ac[1])) {
       var imgName = (/<ac:parameter ac:name="diagramName">([\s\S]+?)<\/ac:parameter>/g).exec(ac[1])[1]
@@ -48,8 +47,9 @@ function handleImg (id) {
     img = `<img src="./${encodeURIComponent(imgName)}" />`
 
     downloadImg(url, `./build/${id}/${imgName}`, (info) => {
-      console.log(chalk.green(`- File ${imgName}.png download completed`))
+      console.log(chalk.green(`- File ${imgName} download completed`))
     })
+
     return page.replace(ac[0], img)
   }
 }

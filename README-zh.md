@@ -13,11 +13,11 @@
 ### 使用方法
 1. `git clone` 或 download repo.
 1. `npm install` 或 `yarn`
-1. `npm start [confluence根文章id]`
+1. `npm start [confluence根文章id] [文档名]`
 
 	会以id为根目录, 导出根目录以下的结构和文章
 
-	例如: `npm start 741256` 会导出 id=741256 下的所有子文章
+	例如: `npm start 741256 Doc-1.0` 会导出 id=741256 下的所有子文章
 1. 导出的静态文档在`./build`中, 可以打开`index.html`查看文档.
 
 ### 注意事项
@@ -29,3 +29,6 @@
 
 ### 最后
 - 仍在改进, 任何问题请Issues.
+
+### Demo
+![](./demo.jpg)
