@@ -4,7 +4,7 @@ const fetchChild = (id, cb) => {
   if (!id) { console.log('- 不给我Id叫我转什么?') }
 
   var fetchTree = (id) => {
-    const url = `${process.env.ip}/rest/api/content/search?cql=parent=${id}&expand=history.lastUpdated`
+    const url = `http://192.168.130.51:8090/rest/api/content/search?cql=parent=${id}&expand=history.lastUpdated`
     return fetch(url, {
       headers: {
         Accept: 'application/json',

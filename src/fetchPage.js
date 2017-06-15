@@ -1,5 +1,5 @@
 const fetchPage = (id, cb) => {
-  const url = `${process.env.ip}/rest/api/content/${id}?expand=body.storage`
+  const url = `http://192.168.130.51:8090/rest/api/content/${id}?expand=body.storage`
   return fetch(url, {
     headers: {
       Accept: 'application/json',

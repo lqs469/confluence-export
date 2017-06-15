@@ -11,7 +11,8 @@ function downloadImg (idAndName, dest, cb) {
         user: 'qinshuo',
         pass: '4693687'
       }
-    }).pipe(file)
+    })
+    .pipe(file)
     .on('error', (err) => console.log('err', err))
     .on('finish', () => file.close())
     .on('close', cb)
