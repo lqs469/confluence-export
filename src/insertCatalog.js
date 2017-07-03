@@ -2,12 +2,13 @@ const fs = require('fs')
 const chalk = require('chalk')
 
 function insertCatalog (tree, title, name) {
+  var fristPage = 99999999
+
   var link = (id, title, hasChild) => {
-    fristPage = id < fristPage ? id : fristPage
+    fristPage = +id < fristPage ? id : fristPage
     return `<a class="link ${hasChild ? 'has-child': ''}" href="../${id}/index.html">${title}</a>`
   }
 
-  var fristPage = 9999999
 
   var Tree = (tree) => {
     var cata = ''

@@ -37,9 +37,9 @@ function handleImg (id) {
     var imgName = ''
 
     if ((/ri:filename=/g).test(ac[1])) {
-      imgName = (/ri:filename="([\s\S]+?)" \/>/g).exec(ac[1])[1]
-    } else {
-      imgName = (/ri:value="([\s\S]+?)" \/>/g).exec(ac[1])[1]
+      imgName = (/ri:filename="([\s\S]+?)"/g).exec(ac[1])[1]
+    } else if ((/ri:value=/g).test(ac[1])) {
+      imgName = (/ri:value="([\s\S]+?)"/g).exec(ac[1])[1]
     }
 
     var url = (/http:\/\//g).test(imgName) ? imgName : `${id}/${imgName}`
