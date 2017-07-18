@@ -3,9 +3,9 @@ const request = require('request')
 
 function downloadImg (idAndName, dest, cb) {
   var url = (/http:\/\//g).test(idAndName)
-    ? idAndName :`http://192.168.130.51:8090/download/attachments/${idAndName}`
+    ? idAndName :`http://192.168.130.51:8090/download/attachments/${encodeURI(idAndName)}`
 
-  var file = fs.createWriteStream(dest)
+  let file = fs.createWriteStream(dest)
   request.head(url, function (err, res, body) {
     request(url, {
       'auth': {

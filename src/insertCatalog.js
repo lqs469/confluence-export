@@ -31,6 +31,8 @@ function insertCatalog (tree, title, name) {
     return cata
   }
 
+  this.title = title
+
   this.page = `
     <div class="catalog">
       <h1 class='title'>${name}</h1>
