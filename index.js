@@ -42,7 +42,8 @@ function getPage (child, tree) {
     new Promise((resolve) => {
       handleImg.call(this, child)
       resolve()
-    }).catch(() => {})
+    })
+    .catch(() => {})
   }).then(() => {
     fs.writeFile(`./build/${child}/index.html`, this.page, (err) => {
       console.log(err || `${chalk.cyan(`- got ${child}!`)}`)

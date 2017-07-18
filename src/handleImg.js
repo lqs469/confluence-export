@@ -4,6 +4,8 @@ const chalk = require('chalk')
 function handleImg (id) {
   var page = this.page
 
+  this.page = replace3(page)
+
   while ((/ac:structured-macro/g).test(page)) {
     page = replace1(page)
     this.page = page
@@ -13,6 +15,8 @@ function handleImg (id) {
     page = replace2(page)
     this.page = page
   }
+
+
 
   function replace1 (page) {
     var ac = (/<ac:structured-macro[\s\S]+?>([\s\S]+?)<\/ac:structured-macro>/g).exec(page)
@@ -52,6 +56,19 @@ function handleImg (id) {
     })
 
     return page.replace(ac[0], img)
+  }
+
+  function replace3 (page) {
+    return page.replace(/(<img[\s\S]+?src=")([\s\S]+?)(">)/g, (match, s1, s2, s3) => {
+      const src = s2
+      const imgName = decodeURI((/[\s\S]*\/([\s\S]*)/g).exec(s2)[1])
+
+      downloadImg(src, `./build/${id}/${imgName}`, (info) => {
+        console.log(chalk.green(`- File ${imgName} download completed`))
+      })
+
+      return `${s1}${imgName.replace('?', '%3F')}${s3}`
+    })
   }
 }
 
