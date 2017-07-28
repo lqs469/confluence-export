@@ -3,6 +3,7 @@ function handleX (id) {
   this.page = replace2(this.page)
   this.page = replace3(this.page)
   this.page = replace4(this.page)
+  this.page = replace5(this.page)
 }
 
 var replace1 = (page) => page.replace(/<p><\/p>/g, '')
@@ -24,5 +25,14 @@ var replace4 = (page) => {
   }
   return page
 }
+
+let replace5 = (page) => {
+  // <a href="/pages/viewpage.action?pageId=10457799&amp;preview=%2F10457799%2F10458247%2FdemoTool.zip">
+  if ((/<a href="[\s\S]+?zip">/g).test(page)) {
+
+  }
+}
+
+
 
 module.exports = handleX
