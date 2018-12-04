@@ -17,6 +17,6 @@
     "figlet": "^1.2.0",
     "isomorphic-fetch": "^2.2.1",
     "moment": "^2.17.1",
-    "request": "^2.81.0"
+    "request": "^2.84.0"
   }
 }
