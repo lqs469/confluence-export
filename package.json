@@ -15,7 +15,7 @@
     "dotenv": "^4.0.0",
     "es6-promise": "^4.1.0",
     "figlet": "^1.2.0",
-    "isomorphic-fetch": "^2.2.1",
+    "isomorphic-fetch": "^3.0.0",
     "moment": "^2.17.1",
     "request": "^2.81.0"
   }
